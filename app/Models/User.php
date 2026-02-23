@@ -45,7 +45,35 @@ class User extends Authenticatable
         'is_banned' => 'boolean',
         'email_verified_at' => 'datetime',
     ];
-      public function isGlobalAdmin()
+
+
+        public function ownedColocations()
+    {
+        return $this->hasMany(Colocation::class, 'owner_id');
+    }
+
+    public function memberships()
+    {
+        return $this->hasMany(Membership::class);
+    }
+
+    public function expenses()
+    {
+        return $this->hasMany(Expense::class, 'payeur_id');
+    }
+
+    public function settlementsFrom()
+    {
+        return $this->hasMany(Settlement::class, 'from_user_id');
+    }
+
+    public function settlementsTo()
+    {
+        return $this->hasMany(Settlement::class, 'to_user_id');
+    }
+
+    // Helpers
+    public function isGlobalAdmin()
     {
         return $this->global_role === 'admin';
     }
