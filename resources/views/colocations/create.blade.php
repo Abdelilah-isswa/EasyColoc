@@ -1,16 +1,25 @@
-<x-app-layout>
-    <div class="max-w-lg mx-auto mt-6">
+{{-- resources/views/colocations/create.blade.php --}}
+@extends('layouts.app')
 
-        <form method="POST" action="{{ route('colocations.store') }}">
-            @csrf
+@section('title', 'Create Colocation')
 
-            <label class="block mb-2">Colocation Name</label>
-            <input type="text" name="name" required class="border p-2 w-full">
+@section('content')
+<div class="max-w-lg mx-auto bg-white p-6 rounded shadow mt-6">
+    <h1 class="text-2xl font-bold mb-4">Create a New Colocation</h1>
 
-            <button class="bg-blue-500 text-white px-4 py-2 mt-4">
-                Create
-            </button>
-        </form>
+    <form method="POST" action="{{ route('colocations.store') }}">
+        @csrf
 
-    </div>
-</x-app-layout>
+        <div class="mb-4">
+            <label class="block mb-2 font-semibold" for="name">Colocation Name</label>
+            <input type="text" name="name" id="name" required 
+                   class="border p-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+        </div>
+
+        <button type="submit" 
+                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            Create Colocation
+        </button>
+    </form>
+</div>
+@endsection
