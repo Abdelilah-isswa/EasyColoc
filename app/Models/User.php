@@ -6,7 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-
+use App\Models\Membership;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -51,15 +51,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(Colocation::class, 'owner_id');
     }
-
+    public function colocations()
+{
+    return $this->belongsToMany(Colocation::class, 'memberships')
+        ->withPivot('role', 'joined_at', 'left_at');
+}
     public function memberships()
     {
         return $this->hasMany(Membership::class);
     }
-    public function activeMembership()
+public function activeMembership()
 {
-    return $this->hasOne(Membership::class)
-        ->whereNull('left_at');
+    return $this->memberships()
+        ->whereNull('left_at')
+        ->first();
 }
 
     public function expenses()

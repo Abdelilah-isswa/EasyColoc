@@ -3,7 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ColocationController;
-
+use App\Http\Controllers\CreateColocationController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -19,10 +19,20 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
 
 
 Route::middleware('auth')->group(function () {
+
+    Route::get('/colocations/create', [ColocationController::class, 'create'])
+        ->name('colocations.create');
+
+    Route::post('/colocations', [ColocationController::class, 'store'])
+        ->name('colocations.store');
+
     Route::get('/colocations/{colocation}', [ColocationController::class, 'show'])
         ->name('colocations.show');
+
 });
+
+ 
+require __DIR__.'/auth.php';   
