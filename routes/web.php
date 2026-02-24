@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ColocationController;
 use App\Http\Controllers\CreateColocationController;
+use App\Http\Controllers\CategoryController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -33,6 +34,26 @@ Route::middleware('auth')->group(function () {
         ->name('colocations.show');
 
 });
+Route::middleware('auth')->group(function () {
+    Route::post('/colocations/{colocation}/categories', [CategoryController::class, 'store'])
+        ->name('categories.store');
 
+    Route::delete('/colocations/{colocation}/categories/{category}', [CategoryController::class, 'destroy'])
+        ->name('categories.destroy');
+});
  
+Route::middleware('auth')->group(function () {
+    Route::get('/colocations/{colocation}/categories', [CategoryController::class, 'index'])
+        ->name('categories.index');
+    Route::post('/colocations/{colocation}/categories', [CategoryController::class, 'store'])
+        ->name('categories.store');
+    Route::delete('/colocations/{colocation}/categories/{category}', [CategoryController::class, 'destroy'])
+        ->name('categories.destroy');
+});
+// routes/web.php
+Route::middleware('auth')->group(function () {
+    Route::get('/my-colocations', [ColocationController::class, 'myColocations'])
+        ->name('colocations.my');
+});
+
 require __DIR__.'/auth.php';   

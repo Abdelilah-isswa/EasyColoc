@@ -28,7 +28,15 @@ public function create()
 {
     return view('colocations.create');
 }
+public function myColocations()
+{
+    $user = auth()->user();
 
+    // User can be owner or member
+    $colocations = $user->ownedColocations()->with('members', 'expenses')->get();
+
+    return view('colocations.my', compact('colocations'));
+}
 public function store(Request $request)
 {
     $request->validate([

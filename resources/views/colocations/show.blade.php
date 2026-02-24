@@ -6,6 +6,56 @@
 @section('content')
     <h1 class="text-2xl font-bold mb-4">Colocation: {{ $colocation->name }}</h1>
 
+
+
+    <div class="mb-6">
+    
+
+    {{-- Add category form for Owner --}}
+    @can('manage', $colocation)
+        <form action="{{ route('categories.store', $colocation) }}" method="POST" class="mb-4 flex gap-2">
+            @csrf
+            <input type="text" name="name" placeholder="New category" class="border p-2 flex-1" required>
+            <button class="bg-green-500 text-white px-4 py-2">Add</button>
+        </form>
+    @endcan
+
+  {{-- Categories Section --}}
+<div class="mb-6">
+    <h2 class="text-xl font-semibold mb-2">Categories</h2>
+
+    {{-- Add category form for Owner --}}
+    @if(auth()->id() === $colocation->owner_id)
+        <form action="{{ route('categories.store', $colocation) }}" method="POST" class="mb-4 flex gap-2">
+            @csrf
+            <input type="text" name="name" placeholder="New category" class="border p-2 flex-1" required>
+            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                Add Category
+            </button>
+        </form>
+    @endif
+
+    {{-- List categories --}}
+    @if($colocation->categories->isEmpty())
+        <p>No categories yet.</p>
+    @else
+        <ul class="list-disc ml-6">
+            @foreach($colocation->categories as $category)
+                <li class="flex justify-between items-center mb-1">
+                    {{ $category->name }}
+                    @if(auth()->id() === $colocation->owner_id)
+                        <form action="{{ route('categories.destroy', [$colocation, $category]) }}" method="POST" onsubmit="return confirm('Are you sure?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-500 hover:underline">Delete</button>
+                        </form>
+                    @endif
+                </li>
+            @endforeach
+        </ul>
+    @endif
+</div>
+</div>
     {{-- Owner --}}
     <div class="mb-4">
         <strong>Owner:</strong> {{ $colocation->owner->name }}
