@@ -47,4 +47,28 @@ class Colocation extends Model
     {
         return $this->hasMany(Invitation::class);
     }
+    //helper method 
+    
+
+public function recalculateBalances()
+{
+    $members = $this->members()->wherePivotNull('left_at')->get(); // only active members
+    $balances = [];
+
+    $totalExpenses = $this->expenses()->sum('amount');
+    $memberCount = $members->count();
+
+    if ($memberCount === 0) {
+        return []; // no one to calculate
+    }
+
+    $perMemberShare = $totalExpenses / $memberCount;
+
+    foreach ($members as $member) {
+        $paid = $this->expenses()->where('payeur_id', $member->id)->sum('amount');
+        $balances[$member->id] = $paid - $perMemberShare;
+    }
+
+    return $balances; // array: [user_id => balance]
+}
 }
