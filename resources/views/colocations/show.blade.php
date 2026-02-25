@@ -124,4 +124,14 @@
         </a>
     </div>
 @endif
+{{-- Show invite form only if current user is the owner --}}
+@if(auth()->id() === $colocation->owner_id)
+    <div class="mb-4">
+        <form action="{{ route('invitations.send', $colocation) }}" method="POST" class="flex gap-2">
+            @csrf
+            <input type="email" name="email" placeholder="User email" class="border p-2 flex-1" required>
+            <button class="bg-green-500 text-white px-4 py-2 rounded">Invite</button>
+        </form>
+    </div>
+@endif
 @endsection
