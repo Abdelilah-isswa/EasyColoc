@@ -55,5 +55,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/my-colocations', [ColocationController::class, 'myColocations'])
         ->name('colocations.my');
 });
-
+Route::post('/colocations/{colocation}/expenses', [ExpenseController::class, 'store'])
+    ->name('expenses.store');
 require __DIR__.'/auth.php';   
