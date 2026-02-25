@@ -13,7 +13,7 @@ public function store(Request $request, Colocation $colocation)
         'title' => 'required|string|max:255',
         'amount' => 'required|numeric|min:0.01',
         'category_id' => 'required|exists:categories,id',
-        'date' => 'required|date',
+        
     ]);
 
     // Ensure the category belongs to this colocation
@@ -22,11 +22,19 @@ public function store(Request $request, Colocation $colocation)
     $colocation->expenses()->create([
         'title' => $request->title,
         'amount' => $request->amount,
-        'category_id' => $category->id,
+        'category_id' => $request->category_id,
         'payeur_id' => auth()->id(),
-        'date' => $request->date,
+        'date' => now(),
     ]);
 
-    return back()->with('success', 'Expense added successfully.');
+    return redirect()->route('colocations.show',$colocation)->with('success','expence added');
 }
+public function create(Colocation $colocation){
+$categories = $colocation->categories;
+return view('expenses.create',compact('categories','colocation'));
+
+
+
+}
+
 }

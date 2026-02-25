@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ColocationController;
 use App\Http\Controllers\CreateColocationController;
 use App\Http\Controllers\CategoryController;
-
+use App\Http\Controllers\ExpenseController;
 Route::get('/', function () {
     return view('welcome');
 });
@@ -57,4 +57,11 @@ Route::middleware('auth')->group(function () {
 });
 Route::post('/colocations/{colocation}/expenses', [ExpenseController::class, 'store'])
     ->name('expenses.store');
+Route::middleware('auth')->group(function () {
+    Route::get('/colocations/{colocation}/expenses/create', [ExpenseController::class, 'create'])
+        ->name('expenses.create');
+    Route::post('/colocations/{colocation}/expenses', [ExpenseController::class, 'store'])
+        ->name('expenses.store');
+});
+
 require __DIR__.'/auth.php';   

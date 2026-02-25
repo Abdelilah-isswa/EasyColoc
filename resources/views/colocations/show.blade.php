@@ -104,11 +104,24 @@
                             <td class="px-4 py-2 border">{{ $expense->amount }}</td>
                             <td class="px-4 py-2 border">{{ $expense->payeur->name }}</td>
                             <td class="px-4 py-2 border">{{ $expense->category->name }}</td>
-                            <td class="px-4 py-2 border">{{ $expense->date->format('Y-m-d') }}</td>
+                            <td class="px-4 py-2 border">{{ $expense->date }}</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         @endif
     </div>
+@php
+    $userId = auth()->id();
+    $canParticipate = $colocation->owner_id === $userId || $colocation->members->contains($userId);
+@endphp
+
+@if($canParticipate)
+    <div class="mb-4">
+        <a href="{{ route('expenses.create', $colocation) }}" 
+           class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            Add Expense
+        </a>
+    </div>
+@endif
 @endsection
