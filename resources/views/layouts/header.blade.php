@@ -6,15 +6,19 @@
             <a href="{{ url('/') }}" class="hover:underline">Home</a>
 
             @auth
-                {{-- Link to create a new colocation --}}
+                {{-- Links for authenticated users --}}
                 <a href="{{ route('colocations.create') }}" class="hover:underline">Create Colocation</a>
-
-                {{-- Link to my colocations --}}
                 <a href="{{ route('colocations.my') }}" class="hover:underline">My Colocations</a>
-
-                {{-- Dashboard / Profile --}}
                 <a href="{{ route('dashboard') }}" class="hover:underline">Dashboard</a>
                 <span class="ml-4">Hi, {{ auth()->user()->name }}</span>
+
+                {{-- Logout --}}
+                <form method="POST" action="{{ route('logout') }}" class="inline">
+                    @csrf
+                    <button type="submit" class="hover:underline ml-4">
+                        Logout
+                    </button>
+                </form>
             @endauth
 
             @guest

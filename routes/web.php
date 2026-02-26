@@ -6,7 +6,7 @@ use App\Http\Controllers\CreateColocationController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\InvitationController;
-
+use App\Http\Controllers\Auth\RegisteredUserController;
 Route::get('/', function () {
     return view('welcome');
 });
@@ -21,6 +21,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+
+Route::get('/register/{token?}', [RegisteredUserController::class, 'showRegistrationForm'])
+     ->middleware('guest')
+     ->name('register.token');
+
+Route::post('/register', [RegisteredUserController::class, 'store'])
+     ->middleware('guest')
+     ->name('register');
 
 
 Route::middleware('auth')->group(function () {
@@ -88,4 +96,5 @@ Route::post('/invitations/{token}/decline',
     [InvitationController::class, 'decline'])
     ->middleware('auth')
     ->name('invitations.decline');
+    
 require __DIR__.'/auth.php';   

@@ -62,9 +62,10 @@ public function accept($token)
     }
 
     $invitation = Invitation::where('token', $token)->firstOrFail();
+ 
     $user = auth()->user();
 
-    if ($invitation->isExpired() || $invitation->status !== 'pending') {
+    if ( $invitation->status !== 'pending') {
         abort(403, 'Invitation invalid or expired');
     }
 
@@ -72,7 +73,7 @@ public function accept($token)
         return redirect('/dashboard')->withErrors('You already belong to a colocation.');
     }
 
-    $invitation->colocation->members()->attach($user->id, ['role' => 'Member', 'joined_at' => now()]);
+    $invitation->colocation->members()->attach($user->id, ['role' => 'member', 'joined_at' => now()]);
     $invitation->update(['status' => 'accepted']);
 
     return redirect('/colocations/' . $invitation->colocation->id)
