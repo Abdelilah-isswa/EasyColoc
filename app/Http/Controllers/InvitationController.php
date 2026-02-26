@@ -12,37 +12,42 @@ use App\Mail\ColocationInvitationMail;
 class InvitationController extends Controller
 {
     // Owner sends invitation
-    public function send(Request $request, Colocation $colocation)
-    {   
-         if ($request->user()->id !== $colocation->owner_id) {
-            abort(403, 'Only the owner can invite users.');
-        }
-        $request->validate(['email' => 'required|email']);
-
-        // Check user is owner
-       
-
-        $token = Str::random(32);
-
-        $invitation = Invitation::create([
-            'colocation_id' => $colocation->id,
-            'email' => $request->email,
-            'token' => $token,
-            'expires_at' => now()->addDays(7),
-        ]);
-
-        // Send email
-        Mail::to($request->email)->send(new ColocationInvitationMail($invitation));
-
-        return back()->with('success', 'Invitation sent!');
+public function send(Request $request, Colocation $colocation)
+{   
+    // Only owner can invite
+    if ($request->user()->id !== $colocation->owner_id) {
+        abort(403, 'Only the owner can invite users.');
     }
+
+    $request->validate(['email' => 'required|email']);
+    $email = $request->email;
+    $token = Str::random(32);
+
+    $invitation = Invitation::create([
+        'colocation_id' => $colocation->id,
+        'email' => $email,
+        'token' => $token,
+        'expires_at' => now()->addDays(7),
+    ]);
+
+    // Send the email
+    try {
+        Mail::to($email)->send(new ColocationInvitationMail($invitation, $colocation));
+    } catch (\Exception $e) {
+        // If sending fails, delete the invitation to avoid dangling token
+        $invitation->delete();
+        return back()->withErrors('Failed to send invitation email: ' . $e->getMessage());
+    }
+
+    return back()->with('success', 'Invitation sent to ' . $email . '!');
+}
 
     // Show accept/decline form
     public function acceptForm($token)
     {
         $invitation = Invitation::where('token', $token)->firstOrFail();
 
-        if ($invitation->isExpired() || $invitation->status !== 'pending') {
+        if ( $invitation->status !== 'pending') {
             abort(403, 'Invitation invalid or expired');
         }
 
@@ -50,26 +55,29 @@ class InvitationController extends Controller
     }
 
     // Accept invitation
-    public function accept($token)
-    {
-        $invitation = Invitation::where('token', $token)->firstOrFail();
-        $user = auth()->user();
-
-        if ($invitation->isExpired() || $invitation->status !== 'pending') {
-            abort(403, 'Invitation invalid or expired');
-        }
-
-        // Check user does not already have active colocation
-        if ($user->memberships()->whereNull('left_at')->exists()) {
-            return redirect('/dashboard')->withErrors('You already belong to a colocation.');
-        }
-
-        $invitation->colocation->members()->attach($user->id, ['role' => 'Member']);
-        $invitation->update(['status' => 'accepted']);
-
-        return redirect('/colocations/' . $invitation->colocation->id)
-               ->with('success', 'You joined the colocation!');
+public function accept($token)
+{
+    if (!auth()->check()) {
+        return redirect()->route('login')->with('info', 'Please log in first to accept the invitation.');
     }
+
+    $invitation = Invitation::where('token', $token)->firstOrFail();
+    $user = auth()->user();
+
+    if ($invitation->isExpired() || $invitation->status !== 'pending') {
+        abort(403, 'Invitation invalid or expired');
+    }
+
+    if ($user->memberships()->whereNull('left_at')->exists()) {
+        return redirect('/dashboard')->withErrors('You already belong to a colocation.');
+    }
+
+    $invitation->colocation->members()->attach($user->id, ['role' => 'Member', 'joined_at' => now()]);
+    $invitation->update(['status' => 'accepted']);
+
+    return redirect('/colocations/' . $invitation->colocation->id)
+           ->with('success', 'You joined the colocation!');
+}
 
     // Decline invitation
     public function decline($token)
@@ -79,5 +87,6 @@ class InvitationController extends Controller
 
         return redirect('/dashboard')->with('info', 'Invitation declined.');
     }
+   
 }
 

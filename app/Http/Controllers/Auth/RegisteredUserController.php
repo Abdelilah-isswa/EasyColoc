@@ -18,7 +18,7 @@ class RegisteredUserController extends Controller
     /**
      * Display the registration view.
      */
- protected function create(array $data)
+ public function create(array $data)
 {
     return DB::transaction(function() use ($data) {
         $isFirst = User::count() === 0;

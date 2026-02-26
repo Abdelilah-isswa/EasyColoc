@@ -12,13 +12,18 @@ use Illuminate\Queue\SerializesModels;
 class ColocationInvitationMail extends Mailable
 {
     use Queueable, SerializesModels;
+    public $token;
+    public $colocationName;
+
+
 
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct($token,$colocationName)
     {
-        //
+        $this->token = $token;
+        $this->colocationName = $colocationName;
     }
 
     /**
@@ -37,7 +42,7 @@ class ColocationInvitationMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.name',
+            view: 'emails.colocation_invitation',
         );
     }
 
@@ -49,5 +54,14 @@ class ColocationInvitationMail extends Mailable
     public function attachments(): array
     {
         return [];
+    }
+       public function build()
+    {
+        return $this->subject("You're invited to join {$this->colocationName}")
+                    ->markdown('emails.colocation_invitation')
+                    ->with([
+                        'token' => $this->token,
+                        'colocationName' => $this->colocationName,
+                    ]);
     }
 }

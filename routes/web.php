@@ -1,5 +1,4 @@
 <?php
-
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ColocationController;
@@ -7,6 +6,7 @@ use App\Http\Controllers\CreateColocationController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\InvitationController;
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -64,18 +64,28 @@ Route::middleware('auth')->group(function () {
     Route::post('/colocations/{colocation}/expenses', [ExpenseController::class, 'store'])
         ->name('expenses.store');
 });
-// routes/web.php
-Route::middleware('auth')->group(function () {
-    Route::post('/colocations/{colocation}/invite', [InvitationController::class, 'send'])
+
+
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('/colocations/{colocation}/invite', 
+        [InvitationController::class, 'send'])
         ->name('invitations.send');
-
-    Route::get('/invitations/{token}', [InvitationController::class, 'acceptForm'])
-        ->name('invitations.accept.form');
-
-    Route::post('/invitations/{token}/accept', [InvitationController::class, 'accept'])
-        ->name('invitations.accept');
-    
-    Route::post('/invitations/{token}/decline', [InvitationController::class, 'decline'])
-        ->name('invitations.decline');
 });
+
+
+Route::get('/invitations/{token}/accept',
+    [InvitationController::class, 'acceptForm'])
+    ->name('invitations.acceptForm');
+
+Route::post('/invitations/{token}/accept',
+    [InvitationController::class, 'accept'])
+    ->middleware('auth')
+    ->name('invitations.accept');
+
+Route::post('/invitations/{token}/decline',
+    [InvitationController::class, 'decline'])
+    ->middleware('auth')
+    ->name('invitations.decline');
 require __DIR__.'/auth.php';   

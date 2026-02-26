@@ -32,4 +32,5 @@ class Invitation extends Model
     {
         return $this->status === 'refused';
     }
+
 }
