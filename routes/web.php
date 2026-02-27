@@ -73,7 +73,10 @@ Route::middleware('auth')->group(function () {
         ->name('expenses.store');
 });
 
-
+Route::middleware(['auth'])->group(function () {
+    Route::delete('/colocations/{colocation}/members/{user}', [ColocationController::class, 'removeMember'])
+        ->name('colocations.members.remove');
+});
 
 
 Route::middleware(['auth'])->group(function () {
@@ -96,5 +99,8 @@ Route::post('/invitations/{token}/decline',
     [InvitationController::class, 'decline'])
     ->middleware('auth')
     ->name('invitations.decline');
-    
+// web.php
+Route::post('/colocations/{colocation}/leave', [ColocationController::class, 'leave'])
+     ->middleware('auth')
+     ->name('colocations.leave');
 require __DIR__.'/auth.php';   

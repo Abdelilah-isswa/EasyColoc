@@ -62,7 +62,7 @@ public function accept($token)
     }
 
     $invitation = Invitation::where('token', $token)->firstOrFail();
- 
+    
     $user = auth()->user();
 
     if ( $invitation->status !== 'pending') {

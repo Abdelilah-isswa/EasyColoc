@@ -32,9 +32,8 @@ public function myColocations()
 {
     $user = auth()->user();
 
-    // User can be owner or member
-    $colocations = $user->ownedColocations()->with('members', 'expenses')->get();
-
+   
+$colocations = auth()->user()->colocations()->get();
     return view('colocations.my', compact('colocations'));
 }
 public function store(Request $request)
@@ -43,12 +42,12 @@ public function store(Request $request)
         'name' => 'required|string|max:255'
     ]);
 
-    $user = Auth::user();
+    $user = auth()->user();
 
     // rule: only one active colocation
-   // if ($user->activeMembership()) {
-     //   return back()->withErrors('You already have an active colocation');
-    //}
+    if ($user->activeMembership()) {
+       return back()->withErrors('You already have an active colocation');
+    }
 
     // create colocation
     $colocation = Colocation::create([
@@ -67,4 +66,45 @@ public function store(Request $request)
 
     return redirect()->route('colocations.show', $colocation);
 }
+public function removeMember(Colocation $colocation ,$user)
+{
+    $owner = auth()->user();
+
+    if ($owner->id !== $colocation->owner_id) {
+        abort(403, 'Only the owner can remove members.');
+    }
+
+    // Optional: prevent owner from removing themselves
+    if ($user === $owner->id) {
+        return redirect()->back()->withErrors('You cannot remove yourself.');
+    }
+
+    // Remove member
+    $colocation->members()->detach($user);
+
+    return redirect()->back()->with('success', "has been removed from the colocation.");
+}
+
+public function leave(Colocation $colocation)
+{
+    $user = auth()->user();
+
+    // Check if the user is a member of this colocation
+    if (!$user->colocations()->where('colocation_id', $colocation->id)->exists()) {
+        return back()->withErrors('You are not a member of this colocation.');
+    }
+
+    // Prevent owner from leaving
+    $membership = $user->colocations()->where('colocation_id', $colocation->id)->first();
+    if ($membership->pivot->role === 'owner') {
+        return back()->withErrors('Owner cannot leave the colocation.');
+    }
+
+    // Detach from pivot table (delete membership)
+    $user->colocations()->detach($colocation->id);
+
+    return redirect()->route('colocations.my')->with('success', 'You have left the colocation.');
+}
+
+
 }

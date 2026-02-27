@@ -9,18 +9,32 @@
 @if($colocations->isEmpty())
     <p>You have no colocations yet.</p>
 @else
-    <ul class="space-y-2">
-        @foreach($colocations as $coloc)
-            <li class="bg-white p-4 border rounded shadow hover:bg-gray-50">
-                <a href="{{ route('colocations.show', $coloc) }}" class="font-semibold text-blue-600 hover:underline">
-                    {{ $coloc->name }}
+@foreach($colocations as $colocation)
+    <div class="colocation-card">
+         <a href="{{ route('colocations.show', $colocation) }}" class="font-semibold text-blue-600 hover:underline">
+                    {{ $colocation->name }}
                 </a>
-                <div class="text-sm text-gray-600">
-                    Members: {{ $coloc->members->count() }}
-                    | Expenses: {{ $coloc->expenses->count() }}
+        
+        
+            
+       
+
+        @if($colocation->pivot->role !== 'owner')
+            <form action="{{ route('colocations.leave', $colocation) }}" method="POST" class="inline">
+                @csrf
+                <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                    Leave Colocation
+                </button>
+            </form>
+        @endif
+        <div class="text-sm text-gray-600">
+                    Members: {{ $colocation->members->count() }}
+                    | Expenses: {{ $colocation->expenses->count() }}
                 </div>
-            </li>
-        @endforeach
-    </ul>
+    </div>
+@endforeach
 @endif
 @endsection
+
+
+

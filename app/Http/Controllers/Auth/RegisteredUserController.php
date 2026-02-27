@@ -48,11 +48,13 @@ public function store(Request $request): RedirectResponse
         'password' => ['required', 'confirmed', Rules\Password::defaults()],
         'invitation_token' => ['nullable', 'string', 'exists:invitations,token'], // add this
     ]);
+    $globalRole = DB::table('users')->count() === 0 ? 'admin' : 'user';
 
     $user = User::create([
         'name' => $request->name,
         'email' => $request->email,
         'password' => Hash::make($request->password),
+        'global_role'=> $globalRole,
     ]);
 
     event(new Registered($user));
