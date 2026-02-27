@@ -5,7 +5,7 @@
 
 @section('content')
 @auth
-    @if(auth()->user()->activeMembership())
+    @if(auth()->user()->activeMembership() && auth()->user()->global_role ==='user')
         <p class="text-red-500">
             You already have an active colocation. You cannot create another.
         </p>
@@ -30,7 +30,7 @@
 </div>
 
 
-    @endif
+@endif
 
 
 @endauth

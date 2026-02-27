@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\UserController;
 Route::get('/', function () {
     return view('welcome');
 });
@@ -103,4 +104,11 @@ Route::post('/invitations/{token}/decline',
 Route::post('/colocations/{colocation}/leave', [ColocationController::class, 'leave'])
      ->middleware('auth')
      ->name('colocations.leave');
+
+
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
+    Route::post('/admin/users/{user}/ban', [UserController::class, 'ban'])->name('admin.users.ban');
+    Route::post('/admin/users/{user}/unban', [UserController::class, 'unban'])->name('admin.users.unban');
+});     
 require __DIR__.'/auth.php';   
