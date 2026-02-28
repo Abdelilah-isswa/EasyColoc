@@ -6,13 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Settlement extends Model
 {
-        protected $fillable = [
-        'from_user_id',
-        'to_user_id',
-        'colocation_id',
-        'amount',
-        'paid_at',
-    ];
+ protected $fillable = [
+    'expense_id',
+    'from_user_id',
+    'to_user_id',
+    'amount',
+    'colocation_id',
+    'paid_at',
+];
 
     public function fromUser()
     {
@@ -28,5 +29,9 @@ class Settlement extends Model
     {
         return $this->belongsTo(Colocation::class);
     }
+    public function expense()
+{
+    return $this->belongsTo(Expense::class);
+}
 }
 

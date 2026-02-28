@@ -6,10 +6,7 @@
 @section('content')
 <h1 class="text-2xl font-bold mb-4">Colocation: {{ $colocation->name }}</h1>
 
-
-
 <div class="mb-6">
-
 
     {{-- Add category form for Owner --}}
     @can('manage', $colocation)
@@ -24,18 +21,14 @@
     <div class="mb-6">
         <h2 class="text-xl font-semibold mb-2">Categories</h2>
 
-        {{-- Add category form for Owner --}}
         @if(auth()->id() === $colocation->owner_id)
         <form action="{{ route('categories.store', $colocation) }}" method="POST" class="mb-4 flex gap-2">
             @csrf
             <input type="text" name="name" placeholder="New category" class="border p-2 flex-1" required>
-            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                Add Category
-            </button>
+            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Add Category</button>
         </form>
         @endif
 
-        {{-- List categories --}}
         @if($colocation->categories->isEmpty())
         <p>No categories yet.</p>
         @else
@@ -56,6 +49,7 @@
         @endif
     </div>
 </div>
+
 {{-- Owner --}}
 <div class="mb-4">
     <strong>Owner:</strong> {{ $colocation->owner->name }}
@@ -71,7 +65,6 @@
         @foreach($colocation->members as $member)
         <div class="flex justify-between items-center mb-2">
             <span>{{ $member->name }} ({{ $member->pivot->role }})</span>
-
             @if(auth()->id() === $colocation->owner_id && auth()->id() !== $member->id)
             <form action="{{ route('colocations.members.remove', [$colocation, $member]) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this member?');">
                 @csrf
@@ -99,6 +92,7 @@
                 <th class="px-4 py-2 border">Payeur</th>
                 <th class="px-4 py-2 border">Category</th>
                 <th class="px-4 py-2 border">Date</th>
+                <th class="px-4 py-2 border">Action</th>
             </tr>
         </thead>
         <tbody>
@@ -109,12 +103,105 @@
                 <td class="px-4 py-2 border">{{ $expense->payeur->name }}</td>
                 <td class="px-4 py-2 border">{{ $expense->category->name }}</td>
                 <td class="px-4 py-2 border">{{ $expense->date }}</td>
+                <td class="px-4 py-2 border">
+                    @php
+                    $userId = auth()->id();
+                    $userSettlement = $expense->settlements
+                        ->where('from_user_id', $userId)
+                        ->first();
+                    @endphp
+
+                    @if($expense->payeur_id === $userId)
+                        <span class="text-gray-600">You paid</span>
+                    @elseif($userSettlement && $userSettlement->paid_at)
+                        <span class="text-green-600 font-bold">Paid</span>
+                    @else
+                        <form action="{{ route('expenses.pay', [$colocation, $expense]) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
+                                Pay
+                            </button>
+                        </form>
+                    @endif
+                </td>
             </tr>
             @endforeach
         </tbody>
     </table>
     @endif
 </div>
+
+{{-- Balances --}}
+<h2 class="text-xl font-semibold mt-6 mb-2">Balances</h2>
+<table class="w-full border border-gray-300 bg-white">
+    <thead class="bg-gray-200">
+        <tr>
+            <th class="px-4 py-2 border">Member</th>
+            <th class="px-4 py-2 border">Balance</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($colocation->members->concat([$colocation->owner]) as $member)
+        <tr>
+            <td class="px-4 py-2 border">{{ $member->name }}</td>
+            <td class="px-4 py-2 border">
+                @php
+                $balance = $balances[$member->id] ?? 0;
+                @endphp
+                @if($balance > 0)
+                    <span class="text-green-600 font-bold">+{{ number_format($balance, 2) }} €</span>
+                @elseif($balance < 0)
+                    <span class="text-red-600 font-bold">{{ number_format($balance, 2) }} €</span>
+                @else
+                    <span>0 €</span>
+                @endif
+            </td>
+        </tr>
+        @endforeach
+    </tbody>
+</table>
+
+{{-- Settlements --}}
+<h2 class="text-xl font-semibold mb-2 mt-6">Settlements</h2>
+@if($colocation->settlements->isEmpty())
+<p>No settlements yet.</p>
+@else
+<table class="w-full border border-gray-300 bg-white">
+    <thead class="bg-gray-200">
+        <tr>
+            <th class="px-4 py-2 border">From</th>
+            <th class="px-4 py-2 border">To</th>
+            <th class="px-4 py-2 border">Amount</th>
+            <th class="px-4 py-2 border">Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($colocation->settlements as $settlement)
+        <tr>
+            <td class="px-4 py-2 border">{{ $settlement->fromUser->name }}</td>
+            <td class="px-4 py-2 border">{{ $settlement->toUser->name }}</td>
+            <td class="px-4 py-2 border">{{ $settlement->amount }}</td>
+            <td class="px-4 py-2 border">
+                @if($settlement->paid_at)
+                    <span class="text-green-600 font-bold">Paid</span>
+                @elseif(auth()->id() === $settlement->from_user_id)
+                    <form action="{{ route('settlements.markAsPaid', $settlement) }}" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
+                            Mark as Paid
+                        </button>
+                    </form>
+                @else
+                    <span class="text-red-600 font-semibold">Pending</span>
+                @endif
+            </td>
+        </tr>
+        @endforeach
+    </tbody>
+</table>
+@endif
+
 @php
 $userId = auth()->id();
 $canParticipate = $colocation->owner_id === $userId || $colocation->members->contains($userId);
@@ -122,13 +209,13 @@ $canParticipate = $colocation->owner_id === $userId || $colocation->members->con
 
 @if($canParticipate)
 <div class="mb-4">
-    <a href="{{ route('expenses.create', $colocation) }}"
-        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+    <a href="{{ route('expenses.create', $colocation) }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
         Add Expense
     </a>
 </div>
 @endif
-{{-- Show invite form only if current user is the owner --}}
+
+{{-- Invite form for owner --}}
 @if(auth()->id() === $colocation->owner_id)
 <div class="mb-4">
     <form action="{{ route('invitations.send', $colocation) }}" method="POST" class="flex gap-2">

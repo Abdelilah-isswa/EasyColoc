@@ -41,12 +41,18 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-  protected $casts = [
+    protected $casts = [
         'is_banned' => 'boolean',
         'email_verified_at' => 'datetime',
     ];
 
-
+// User.php
+public function activeColocations()
+{
+    return $this->belongsToMany(Colocation::class, 'memberships')
+                ->withPivot('role', 'joined_at', 'left_at')
+                ->wherePivotNull('left_at'); // only active
+}
         public function ownedColocations()
     {
         return $this->hasMany(Colocation::class, 'owner_id');

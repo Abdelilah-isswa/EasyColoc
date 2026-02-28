@@ -8,6 +8,8 @@ use App\Models\User;
 class UserController extends Controller
 {
   
+
+
 public function index()
 {
     $users = User::where('global_role', 'user')->get(); // exclude other admins

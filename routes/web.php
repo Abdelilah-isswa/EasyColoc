@@ -8,6 +8,9 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\SettlementController;
+
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -16,12 +19,20 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    // Show profile page
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+
+    // Edit profile form
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+
+    // Update profile
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    // Delete account
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-
 
 Route::get('/register/{token?}', [RegisteredUserController::class, 'showRegistrationForm'])
      ->middleware('guest')
@@ -95,6 +106,7 @@ Route::post('/invitations/{token}/accept',
     [InvitationController::class, 'accept'])
     ->middleware('auth')
     ->name('invitations.accept');
+    
 
 Route::post('/invitations/{token}/decline',
     [InvitationController::class, 'decline'])
@@ -111,4 +123,30 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/users/{user}/ban', [UserController::class, 'ban'])->name('admin.users.ban');
     Route::post('/admin/users/{user}/unban', [UserController::class, 'unban'])->name('admin.users.unban');
 });     
+
+
+// web.php
+Route::post('/colocations/{colocation}/expenses/{expense}/pay', [ExpenseController::class, 'pay'])->name('expenses.pay');
+
+
+
+Route::middleware('auth')->group(function () {
+
+    Route::post('/settlements/{settlement}/pay', 
+        [SettlementController::class, 'pay']
+    )->name('settlements.pay');
+
+});
+Route::middleware(['auth'])->group(function () {
+    Route::get('/colocations/{colocation}/expenses', [ExpenseController::class, 'history'])
+        ->name('colocations.expenses.history');
+});
+
+Route::middleware('auth')->patch('/settlements/{settlement}/pay', [SettlementController::class, 'markAsPaid'])
+    ->name('settlements.markAsPaid');
+    // routes/web.php
+Route::patch('/colocations/{colocation}/cancel', [ColocationController::class, 'cancel'])
+    ->name('colocations.cancel')
+    ->middleware('auth');
+Route::middleware('auth')->post('/colocations/{colocation}/expenses/{expense}/pay', [ExpenseController::class, 'pay'])->name('expenses.pay');
 require __DIR__.'/auth.php';   

@@ -6,19 +6,42 @@
             <a href="{{ url('/') }}" class="hover:underline">Home</a>
 
             @auth
-                {{-- Links for authenticated users --}}
+                {{-- Colocation Links --}}
                 <a href="{{ route('colocations.create') }}" class="hover:underline">Create Colocation</a>
                 <a href="{{ route('colocations.my') }}" class="hover:underline">My Colocations</a>
-                <a href="{{ route('dashboard') }}" class="hover:underline">Dashboard</a>
-                <span class="ml-4">Hi, {{ auth()->user()->name }}</span>
 
-                {{-- Logout --}}
-                <form method="POST" action="{{ route('logout') }}" class="inline">
-                    @csrf
-                    <button type="submit" class="hover:underline ml-4">
-                        Logout
-                    </button>
-                </form>
+                @isset($colocation)
+                    <a href="{{ route('colocations.expenses.history', $colocation) }}" class="hover:underline">
+                        Expenses History
+                    </a>
+                @endisset
+
+                {{-- Admin Panel --}}
+                @if(auth()->user()->global_role === 'admin')
+                    <a href="{{ route('admin.users.index') }}" class="hover:underline font-bold text-yellow-300">
+                        Admin Panel
+                    </a>
+                @endif
+
+                {{-- User Dropdown --}}
+                <div class="relative ml-4 group">
+                    <button class="hover:underline">Hi, {{ auth()->user()->name }}</button>
+                    <div class="absolute right-0 mt-2 w-40 bg-white text-black rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                        @php
+                            $profileLinks = [
+                                ['route' => 'profile.show', 'label' => 'Profile'],
+                                ['route' => 'profile.edit', 'label' => 'Edit Profile']
+                            ];
+                        @endphp
+                        @foreach($profileLinks as $link)
+                            <a href="{{ route($link['route']) }}" class="block px-4 py-2 hover:bg-gray-200">{{ $link['label'] }}</a>
+                        @endforeach
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full text-left px-4 py-2 hover:bg-gray-200">Logout</button>
+                        </form>
+                    </div>
+                </div>
             @endauth
 
             @guest

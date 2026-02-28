@@ -11,18 +11,35 @@ use App\Models\Membership;
 
 class ColocationController extends Controller
 {
-    public function show(Colocation $colocation)
-    {
-        $colocation->load([
-            'owner',
-            'members',
-            'expenses.payeur',
-            'expenses.category'
-        ]);
+public function show(Colocation $colocation)
+{
+    $user = auth()->user();
 
-        return view('colocations.show', compact('colocation'));
+    // Check membership and left_at
+    $membership = $user->colocations()
+        ->where('colocation_id', $colocation->id)
+        ->first();
+
+    if (!$membership || $membership->pivot->left_at) {
+        abort(403, 'You do not have access to this colocation.');
     }
 
+    if ($colocation->status === 'cancelled') {
+        abort(403, "This colocation has been cancelled.");
+    }
+
+    // your existing logic
+
+    $colocation->load([
+        'owner',
+        'members',
+        'expenses.payeur',
+        'expenses.category',
+        'settlements'
+    ]);
+
+    return view('colocations.show', compact('colocation'));
+}
 
 public function create()
 {
@@ -32,8 +49,11 @@ public function myColocations()
 {
     $user = auth()->user();
 
-   
-$colocations = auth()->user()->colocations()->get();
+    // Only active memberships (left_at is null)
+    $colocations = $user->colocations()
+        ->wherePivot('left_at', null)
+        ->get();
+
     return view('colocations.my', compact('colocations'));
 }
 public function store(Request $request)
@@ -44,8 +64,8 @@ public function store(Request $request)
 
     $user = auth()->user();
 
-    // rule: only one active colocation
-    if ($user->activeMembership()) {
+    // Regular users can only have one active colocation
+    if ($user->global_role !== 'admin' && $user->activeMembership()) {
        return back()->withErrors('You already have an active colocation');
     }
 
@@ -56,7 +76,7 @@ public function store(Request $request)
         'status' => 'active'
     ]);
 
-    // create membership owner
+    // create membership for owner
     Membership::create([
         'user_id' => $user->id,
         'colocation_id' => $colocation->id,
@@ -89,22 +109,57 @@ public function leave(Colocation $colocation)
 {
     $user = auth()->user();
 
-    // Check if the user is a member of this colocation
-    if (!$user->colocations()->where('colocation_id', $colocation->id)->exists()) {
+    // Get the membership row
+    $membership = $user->colocations()
+        ->where('colocation_id', $colocation->id)
+        ->first();
+
+    if (!$membership) {
         return back()->withErrors('You are not a member of this colocation.');
     }
 
     // Prevent owner from leaving
-    $membership = $user->colocations()->where('colocation_id', $colocation->id)->first();
     if ($membership->pivot->role === 'owner') {
         return back()->withErrors('Owner cannot leave the colocation.');
     }
 
-    // Detach from pivot table (delete membership)
-    $user->colocations()->detach($colocation->id);
+    // Soft leave: set left_at timestamp
+    $user->colocations()->updateExistingPivot($colocation->id, [
+        'left_at' => now()
+    ]);
 
     return redirect()->route('colocations.my')->with('success', 'You have left the colocation.');
 }
+public function cancel(Colocation $colocation)
+{
+    $user = auth()->user();
 
+    // Only owner can cancel
+    if ($colocation->owner_id !== $user->id) {
+        return back()->withErrors('Only the owner can cancel this colocation.');
+    }
 
+    // Mark as cancelled
+    $colocation->update([
+        'status' => 'cancelled',
+    ]);
+
+    return back()->with('success', 'Colocation cancelled successfully.');
+}
+public function statistics(Colocation $colocation)
+{
+    $colocation->load('expenses.category');
+
+    // 1. Group expenses by category
+    $expensesByCategory = $colocation->expenses
+        ->groupBy(fn($expense) => $expense->category->name)
+        ->map(fn($group) => $group->sum('amount'));
+
+    // 2. Group expenses by month
+    $expensesByMonth = $colocation->expenses
+        ->groupBy(fn($expense) => $expense->date->format('Y-m'))
+        ->map(fn($group) => $group->sum('amount'));
+
+    return view('colocations.statistics', compact('colocation', 'expensesByCategory', 'expensesByMonth'));
+}
 }
