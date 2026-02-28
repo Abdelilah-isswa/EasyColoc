@@ -22,14 +22,14 @@ public function send(Request $request, Colocation $colocation)
     $request->validate(['email' => 'required|email']);
     $email = $request->email;
     $token = Str::random(32);
-
+   
     $invitation = Invitation::create([
         'colocation_id' => $colocation->id,
         'email' => $email,
         'token' => $token,
         'expires_at' => now()->addDays(7),
     ]);
-
+     
     // Send the email
     try {
         Mail::to($email)->send(new ColocationInvitationMail($invitation, $colocation));

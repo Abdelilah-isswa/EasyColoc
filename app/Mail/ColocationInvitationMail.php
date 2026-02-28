@@ -20,10 +20,12 @@ class ColocationInvitationMail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct($token,$colocationName)
+ public function __construct($invitation, $colocation)
     {
-        $this->token = $token;
-        $this->colocationName = $colocationName;
+        $this->token = $invitation->token;
+        $this->colocationName = $colocation->name;
+
+        
     }
 
     /**
@@ -55,13 +57,17 @@ class ColocationInvitationMail extends Mailable
     {
         return [];
     }
-       public function build()
-    {
-        return $this->subject("You're invited to join {$this->colocationName}")
-                    ->markdown('emails.colocation_invitation')
-                    ->with([
-                        'token' => $this->token,
-                        'colocationName' => $this->colocationName,
-                    ]);
-    }
+public function build()
+{
+    $url = route('invitations.accept', $this->token);
+    
+    return $this->subject('Colocation Invitation')
+                ->view('emails.colocation_invitation')
+                ->with([
+                    'colocationName' => $this->colocationName,
+                    'url' => $url,
+                ]);
 }
+}
+
+
