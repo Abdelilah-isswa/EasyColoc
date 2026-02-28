@@ -147,17 +147,36 @@ public function cancel(Colocation $colocation)
 {
     $user = auth()->user();
 
-    // Only owner can cancel
     if ($colocation->owner_id !== $user->id) {
-        return back()->withErrors('Only the owner can cancel this colocation.');
+        abort(403, "Only the owner can cancel the colocation.");
     }
 
-    // Mark as cancelled
-    $colocation->update([
-        'status' => 'cancelled',
-    ]);
+    // Cancel the colocation
+    $colocation->update(['status' => 'cancelled']);
 
-    return back()->with('success', 'Colocation cancelled successfully.');
+    // Adjust members' reputation
+    foreach ($colocation->members as $member) {
+        if ($member->id === $user->id) continue; // skip owner
+
+        $unpaid = $colocation->expenses()
+            ->whereHas('settlements', function ($q) use ($member) {
+                $q->where('from_user_id', $member->id)
+                  ->whereNull('paid_at');
+            })->exists();
+
+        if ($unpaid) {
+            $member->decrement('reputation_score'); // -1
+        } else {
+            $member->increment('reputation_score'); // +1
+        }
+
+        // Soft leave all members
+        $member->colocations()->updateExistingPivot($colocation->id, [
+            'left_at' => now()
+        ]);
+    }
+
+    return redirect()->route('colocations.my')->with('success', 'Colocation cancelled.');
 }
 public function statistics(Colocation $colocation)
 {
