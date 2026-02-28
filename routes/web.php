@@ -149,4 +149,19 @@ Route::patch('/colocations/{colocation}/cancel', [ColocationController::class, '
     ->name('colocations.cancel')
     ->middleware('auth');
 Route::middleware('auth')->post('/colocations/{colocation}/expenses/{expense}/pay', [ExpenseController::class, 'pay'])->name('expenses.pay');
+
+
+
+Route::middleware(['auth'])->group(function () {
+    
+    Route::get('/colocations/{colocation}/statistics', [ColocationController::class, 'statistics'])
+        ->name('colocations.statistics');
+});
+
+
+
+
+
+
+
 require __DIR__.'/auth.php';   

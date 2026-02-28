@@ -14,6 +14,11 @@
                     <a href="{{ route('colocations.expenses.history', $colocation) }}" class="hover:underline">
                         Expenses History
                     </a>
+
+                    {{-- Statistics link --}}
+                    <a href="{{ route('colocations.statistics', $colocation) }}" class="hover:underline">
+                        Statistics
+                    </a>
                 @endisset
 
                 {{-- Admin Panel --}}

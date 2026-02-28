@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models;
-
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class Expense extends Model
@@ -14,7 +14,13 @@ class Expense extends Model
         'payeur_id',
         'date',
     ];
-
+      protected $casts = [
+        'date' => 'datetime',  
+    ];
+     public function getMonthAttribute()
+    {
+        return $this->date->format('Y-m'); 
+    }
     public function colocation()
     {
         return $this->belongsTo(Colocation::class);

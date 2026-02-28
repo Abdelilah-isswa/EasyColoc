@@ -117,11 +117,24 @@ public function leave(Colocation $colocation)
     if (!$membership) {
         return back()->withErrors('You are not a member of this colocation.');
     }
+     // Check unpaid debts
+    $unpaid = $colocation->expenses()
+        ->whereHas('settlements', function ($q) use ($user) {
+            $q->where('from_user_id', $user->id)
+              ->whereNull('paid_at');
+        })->exists();
 
     // Prevent owner from leaving
     if ($membership->pivot->role === 'owner') {
         return back()->withErrors('Owner cannot leave the colocation.');
     }
+     // Update reputation
+    if ($unpaid) {
+        $user->decrement('reputation_score'); // -1
+    } else {
+        $user->increment('reputation_score'); // +1
+    }
+
 
     // Soft leave: set left_at timestamp
     $user->colocations()->updateExistingPivot($colocation->id, [
@@ -148,18 +161,33 @@ public function cancel(Colocation $colocation)
 }
 public function statistics(Colocation $colocation)
 {
-    $colocation->load('expenses.category');
+    // Fetch expenses for this colocation
+    $expenses = $colocation->expenses;
 
-    // 1. Group expenses by category
-    $expensesByCategory = $colocation->expenses
-        ->groupBy(fn($expense) => $expense->category->name)
-        ->map(fn($group) => $group->sum('amount'));
+    // Prepare monthly stats
+    $monthlyTotals = [];
+    foreach ($expenses as $expense) {
+        $month = $expense->month; // uses the accessor we added
+        if (!isset($monthlyTotals[$month])) {
+            $monthlyTotals[$month] = 0;
+        }
+        $monthlyTotals[$month] += $expense->amount;
+    }
 
-    // 2. Group expenses by month
-    $expensesByMonth = $colocation->expenses
-        ->groupBy(fn($expense) => $expense->date->format('Y-m'))
-        ->map(fn($group) => $group->sum('amount'));
+    // Prepare category stats
+    $categoryTotals = [];
+    foreach ($expenses as $expense) {
+        $category = $expense->category->name;
+        if (!isset($categoryTotals[$category])) {
+            $categoryTotals[$category] = 0;
+        }
+        $categoryTotals[$category] += $expense->amount;
+    }
 
-    return view('colocations.statistics', compact('colocation', 'expensesByCategory', 'expensesByMonth'));
+    return view('colocations.statistics', compact(
+        'colocation', 
+        'monthlyTotals', 
+        'categoryTotals'
+    ));
 }
 }
