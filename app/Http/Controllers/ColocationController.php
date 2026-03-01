@@ -11,18 +11,23 @@ use App\Models\Membership;
 
 class ColocationController extends Controller
 {
-public function show(Colocation $colocation,Request $request)
+public function show(Colocation $colocation, Request $request)
 {
     $user = auth()->user();
-        $month = $request->query('month', now()->format('Y-m'));
 
-    // Filter expenses by month
-   $expenses = $colocation->expenses()
-    ->with(['payeur','category','settlements'])
-    ->whereYear('date', substr($month, 0, 4))
-    ->whereMonth('date', substr($month, 5, 2))
-    ->get();
-    
+    // Get the month filter from query, default to 'all'
+    $month = $request->query('month', 'all');
+
+    // Start query for expenses
+    $expensesQuery = $colocation->expenses()->with(['payeur','category','settlements']);
+
+    // Apply month filter only if not 'all'
+    if ($month !== 'all') {
+        $expensesQuery->whereYear('date', substr($month, 0, 4))
+                      ->whereMonth('date', substr($month, 5, 2));
+    }
+
+    $expenses = $expensesQuery->get();
 
     // Check membership and left_at
     $membership = $user->colocations()
@@ -37,23 +42,39 @@ public function show(Colocation $colocation,Request $request)
         abort(403, "This colocation has been cancelled.");
     }
 
-    // your existing logic
+    // Load relationships
+ $colocation->load([
+    'owner',
+    'activeMembers',
+    'settlements'
+]);
 
- 
-        $members = $colocation->members;
+$members = $colocation->activeMembers;
     if (!$members->contains($colocation->owner)) {
         $members->push($colocation->owner);
     }
-     $balances = [];
+
+    $balances = [];
     $numMembers = $members->count();
     $totalExpenses = $expenses->sum('amount');
 
-    // Calculate each member's balance
-    foreach ($members as $member) {
-        $paid = $expenses->where('payeur_id', $member->id)->sum('amount');
-        $share = $numMembers > 0 ? $totalExpenses / $numMembers : 0;
-        $balances[$member->id] = $paid - $share;
-    }
+foreach ($members as $member) {
+    $paidExpenses = $expenses->where('payeur_id', $member->id)->sum('amount');
+    $share = $numMembers > 0 ? $totalExpenses / $numMembers : 0;
+
+    // Settlements: money received from others
+    $received = $colocation->settlements
+                  ->where('to_user_id', $member->id)
+                  ->sum('amount');
+
+    // Settlements: money paid to others
+    $paidSettlements = $colocation->settlements
+                  ->where('from_user_id', $member->id)
+                  ->sum('amount');
+
+    $balances[$member->id] = $paidExpenses - $share + $received - $paidSettlements;
+}
+
     $months = collect(range(0, 11))->map(fn($i) => now()->subMonths($i)->format('Y-m'));
 
     return view('colocations.show', compact('colocation', 'expenses', 'months', 'month', 'balances', 'members'));

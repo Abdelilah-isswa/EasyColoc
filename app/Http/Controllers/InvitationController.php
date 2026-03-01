@@ -70,7 +70,7 @@ public function accept($token)
     }
 
     if ($user->memberships()->whereNull('left_at')->exists()) {
-        return redirect('/dashboard')->withErrors('You already belong to a colocation.');
+        return redirect('/')->withErrors('You already belong to a colocation.');
     }
 
     $invitation->colocation->members()->attach($user->id, ['role' => 'member', 'joined_at' => now()]);
@@ -86,7 +86,7 @@ public function accept($token)
         $invitation = Invitation::where('token', $token)->firstOrFail();
         $invitation->update(['status' => 'declined']);
 
-        return redirect('/dashboard')->with('info', 'Invitation declined.');
+        return redirect('/home')->with('info', 'Invitation declined.');
     }
    
 }

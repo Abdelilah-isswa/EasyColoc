@@ -76,7 +76,7 @@ public function store(Request $request): RedirectResponse
 
     Auth::login($user);
 
-    return redirect(route('dashboard', absolute: false));
+    return redirect(route('home', absolute: false));
 }
 
     public function showRegistrationForm(?string $token = null)

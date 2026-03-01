@@ -68,9 +68,10 @@ public function activeColocations()
     }
 public function activeMembership()
 {
-    return $this->memberships()
-        ->whereNull('left_at')
-        ->first();
+    return $this->colocations()
+        ->wherePivot('left_at', null)
+        ->where('status', 'active') // ignore cancelled
+        ->exists();
 }
 
     public function expenses()

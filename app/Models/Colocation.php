@@ -27,6 +27,13 @@ class Colocation extends Model
             ->withPivot('role','joined_at','left_at')
             ->withTimestamps();
     }
+public function activeMembers()
+{
+    return $this->belongsToMany(User::class, 'memberships')
+        ->withPivot('role','joined_at','left_at')
+        ->wherePivotNull('left_at')
+        ->withTimestamps();
+}
 
     public function categories()
     {

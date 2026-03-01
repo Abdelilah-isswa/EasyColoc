@@ -100,7 +100,7 @@
                     <p class="text-gray-500 text-center py-4">No members yet</p>
                     @else
                     <ul class="space-y-3">
-                        @foreach($colocation->members as $member)
+                        @foreach($members as $member)
                         <li class="flex items-center justify-between">
                             <div class="flex items-center">
                                 <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white font-semibold text-sm">
@@ -207,7 +207,7 @@
                 </div>
                 <div class="p-4">
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                        @foreach($colocation->members as $member)
+                        @foreach($members as $member)
                         @php
                         $balance = $balances[$member->id] ?? 0;
                         @endphp
@@ -224,17 +224,21 @@
                     </div>
                 </div>
             </div>
-            <form method="GET" class="mb-4 flex items-center space-x-2">
-                <label for="month" class="font-medium">Filter by month:</label>
-                <select name="month" id="month" class="border rounded px-2 py-1">
-                    @foreach($months as $m)
-                    <option value="{{ $m }}" {{ $month === $m ? 'selected' : '' }}>
-                        {{ \Carbon\Carbon::parse($m . '-01')->format('F Y') }}
-                    </option>
-                    @endforeach
-                </select>
-                <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">Filter</button>
-            </form>
+  <form method="GET" class="mb-4 flex items-center space-x-2">
+    <label for="month" class="font-medium">Filter by month:</label>
+    <select name="month" id="month" class="border rounded px-2 py-1">
+        {{-- All months --}}
+        <option value="all" {{ $month === 'all' ? 'selected' : '' }}>All</option>
+
+        {{-- Specific months --}}
+        @foreach($months as $m)
+        <option value="{{ $m }}" {{ $month === $m ? 'selected' : '' }}>
+            {{ \Carbon\Carbon::parse($m . '-01')->format('F Y') }}
+        </option>
+        @endforeach
+    </select>
+    <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">Filter</button>
+</form>
             
 
 
