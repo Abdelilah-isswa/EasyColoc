@@ -17,11 +17,11 @@ public function show(Colocation $colocation,Request $request)
         $month = $request->query('month', now()->format('Y-m'));
 
     // Filter expenses by month
-    $expenses = $colocation->expenses()
-        ->whereYear('date', substr($month, 0, 4))
-        ->whereMonth('date', substr($month, 5, 2))
-        ->get();
-
+   $expenses = $colocation->expenses()
+    ->with(['payeur','category','settlements'])
+    ->whereYear('date', substr($month, 0, 4))
+    ->whereMonth('date', substr($month, 5, 2))
+    ->get();
     
 
     // Check membership and left_at
@@ -39,13 +39,7 @@ public function show(Colocation $colocation,Request $request)
 
     // your existing logic
 
-    $colocation->load([
-        'owner',
-        'members',
-        'expenses.payeur',
-        'expenses.category',
-        'settlements'
-    ]);
+ 
         $members = $colocation->members;
     if (!$members->contains($colocation->owner)) {
         $members->push($colocation->owner);

@@ -108,7 +108,7 @@ Route::post('/invitations/{token}/decline',
     [InvitationController::class, 'decline'])
     ->middleware('auth')
     ->name('invitations.decline');
-// web.php
+
 Route::post('/colocations/{colocation}/leave', [ColocationController::class, 'leave'])
      ->middleware('auth')
      ->name('colocations.leave');
@@ -121,7 +121,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 });     
 
 
-// web.php
+
 Route::post('/colocations/{colocation}/expenses/{expense}/pay', [ExpenseController::class, 'pay'])->name('expenses.pay');
 
 

@@ -108,7 +108,7 @@
                                 </div>
                                 <div class="ml-3">
                                     <p class="text-sm font-medium text-gray-900">{{ $member->name }}</p>
-                                    <p class="text-xs text-gray-500">{{ $member->pivot->role }}</p>
+                                    <p class="text-xs text-gray-500">{{ $member->pivot->role ?? 'member' }}</p>
                                 </div>
                             </div>
                             @if(auth()->id() === $colocation->owner_id && auth()->id() !== $member->id)
@@ -253,7 +253,7 @@
                     <p class="text-gray-500 text-center py-8">No expenses yet</p>
                     @else
                     <div class="space-y-3">
-                        @foreach($colocation->expenses as $expense)
+                        @foreach($expenses as $expense)
                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center text-white font-semibold">

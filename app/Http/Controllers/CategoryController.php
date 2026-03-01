@@ -20,8 +20,7 @@ class CategoryController extends Controller
     }
     public function store(Request $request, Colocation $colocation)
     {
-        // Only owner can manage categories
-      //  $this->authorize('manage', $colocation);
+      
          if (auth()->id() !== $colocation->owner_id) {
         abort(403, 'Unauthorized.');
     }
@@ -38,7 +37,6 @@ class CategoryController extends Controller
 
     public function destroy(Colocation $colocation, Category $category)
     {
-       // $this->authorize('manage', $colocation);
                if (auth()->id() !== $colocation->owner_id) {
         abort(403, 'Unauthorized.');
     }
