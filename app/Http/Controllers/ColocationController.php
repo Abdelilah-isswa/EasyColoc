@@ -11,9 +11,18 @@ use App\Models\Membership;
 
 class ColocationController extends Controller
 {
-public function show(Colocation $colocation)
+public function show(Colocation $colocation,Request $request)
 {
     $user = auth()->user();
+        $month = $request->query('month', now()->format('Y-m'));
+
+    // Filter expenses by month
+    $expenses = $colocation->expenses()
+        ->whereYear('date', substr($month, 0, 4))
+        ->whereMonth('date', substr($month, 5, 2))
+        ->get();
+
+    
 
     // Check membership and left_at
     $membership = $user->colocations()
@@ -37,8 +46,23 @@ public function show(Colocation $colocation)
         'expenses.category',
         'settlements'
     ]);
+        $members = $colocation->members;
+    if (!$members->contains($colocation->owner)) {
+        $members->push($colocation->owner);
+    }
+     $balances = [];
+    $numMembers = $members->count();
+    $totalExpenses = $expenses->sum('amount');
 
-    return view('colocations.show', compact('colocation'));
+    // Calculate each member's balance
+    foreach ($members as $member) {
+        $paid = $expenses->where('payeur_id', $member->id)->sum('amount');
+        $share = $numMembers > 0 ? $totalExpenses / $numMembers : 0;
+        $balances[$member->id] = $paid - $share;
+    }
+    $months = collect(range(0, 11))->map(fn($i) => now()->subMonths($i)->format('Y-m'));
+
+    return view('colocations.show', compact('colocation', 'expenses', 'months', 'month', 'balances', 'members'));
 }
 
 public function create()
@@ -208,5 +232,12 @@ public function statistics(Colocation $colocation)
         'monthlyTotals', 
         'categoryTotals'
     ));
+}
+
+public function allColocations()
+{
+     // Optional if you have a policy
+    $colocations = \App\Models\Colocation::all(); // all colocations
+    return view('admin.colocations.index', compact('colocations'));
 }
 }

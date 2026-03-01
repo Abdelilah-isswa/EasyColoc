@@ -10,14 +10,10 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SettlementController;
 
+use App\Http\Controllers\HomeController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [HomeController::class, 'index'])->middleware(['auth', 'verified'])->name('home');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
 
 
 Route::middleware('auth')->group(function () {
@@ -136,6 +132,10 @@ Route::middleware('auth')->group(function () {
         [SettlementController::class, 'pay']
     )->name('settlements.pay');
 
+});
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/admin/colocations', [ColocationController::class, 'allColocations'])
+        ->name('admin.colocations.index');
 });
 Route::middleware(['auth'])->group(function () {
     Route::get('/colocations/{colocation}/expenses', [ExpenseController::class, 'history'])
