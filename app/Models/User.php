@@ -9,7 +9,6 @@ use Illuminate\Notifications\Notifiable;
 use App\Models\Membership;
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
     /**

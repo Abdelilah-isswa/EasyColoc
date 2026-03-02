@@ -37,9 +37,15 @@ class CategoryController extends Controller
 
     public function destroy(Colocation $colocation, Category $category)
     {
-               if (auth()->id() !== $colocation->owner_id) {
-        abort(403, 'Unauthorized.');
-    }
+        if (auth()->id() !== $colocation->owner_id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        // Check if category has expenses
+        if ($category->expenses()->count() > 0) {
+            return redirect()->back()->withErrors('Cannot delete category with existing expenses.');
+        }
+
         $category->delete();
 
         return redirect()->back()->with('success', 'Category removed.');

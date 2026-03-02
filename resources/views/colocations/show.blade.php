@@ -5,6 +5,23 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto">
+    {{-- Success/Error Messages --}}
+    @if(session('success'))
+    <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+        <span class="block sm:inline">{{ session('success') }}</span>
+    </div>
+    @endif
+
+    @if($errors->any())
+    <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <ul class="list-disc list-inside">
+            @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+
     {{-- Header --}}
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <div>
@@ -341,12 +358,18 @@
                                 $userSettlement = $expense->settlements
                                 ->where('from_user_id', $userId)
                                 ->first();
+                                
+                                // Check if user joined before expense was created
+                                $userMembership = $colocation->memberships()->where('user_id', $userId)->first();
+                                $canPay = $userMembership && $userMembership->joined_at <= $expense->created_at;
                                 @endphp
 
                                 @if($expense->payeur_id === $userId)
                                 <span class="text-xs text-green-600 font-medium">You paid</span>
                                 @elseif($userSettlement && $userSettlement->paid_at)
                                 <span class="text-xs text-green-600 font-medium">Paid</span>
+                                @elseif(!$canPay)
+                                <span class="text-xs text-gray-400 font-medium">N/A</span>
                                 @else
                                 <form action="{{ route('expenses.pay', [$colocation, $expense]) }}" method="POST" class="inline">
                                     @csrf

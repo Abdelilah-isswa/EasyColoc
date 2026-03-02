@@ -22,7 +22,7 @@ class SettlementController extends Controller
         }
 
         // 2️⃣ Only debtor (from_user) or owner can mark as paid
-        $isOwner = $colocation->owners->contains($user->id); // custom relation in Colocation model
+$isOwner = $colocation->owner_id === $user->id;
         if ($settlement->from_user_id !== $user->id && !$isOwner) {
             abort(403, "You are not allowed to mark this as paid.");
         }
