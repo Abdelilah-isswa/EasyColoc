@@ -82,6 +82,7 @@
         </div>
     </div>
 
+    {{-- Main Grid: 1/3 Left, 2/3 Right --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- Left Column: Members & Categories --}}
         <div class="lg:col-span-1 space-y-6">
@@ -193,7 +194,7 @@
             </div>
         </div>
 
-        {{-- Right Column: Balances, Expenses & Settlements --}}
+        {{-- Right Column: Balances, Statistics, Expenses & Settlements --}}
         <div class="lg:col-span-2 space-y-6">
             {{-- Balances Card --}}
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
@@ -224,23 +225,86 @@
                     </div>
                 </div>
             </div>
-  <form method="GET" class="mb-4 flex items-center space-x-2">
-    <label for="month" class="font-medium">Filter by month:</label>
-    <select name="month" id="month" class="border rounded px-2 py-1">
-        {{-- All months --}}
-        <option value="all" {{ $month === 'all' ? 'selected' : '' }}>All</option>
 
-        {{-- Specific months --}}
-        @foreach($months as $m)
-        <option value="{{ $m }}" {{ $month === $m ? 'selected' : '' }}>
-            {{ \Carbon\Carbon::parse($m . '-01')->format('F Y') }}
-        </option>
-        @endforeach
-    </select>
-    <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">Filter</button>
-</form>
-            
+            {{-- Month Filter --}}
+            <form method="GET" class="flex items-center space-x-2">
+                <label for="month" class="font-medium">Filter by month:</label>
+                <select name="month" id="month" class="border rounded px-2 py-1">
+                    <option value="all" {{ $month === 'all' ? 'selected' : '' }}>All</option>
+                    @foreach($months as $m)
+                    <option value="{{ $m }}" {{ $month === $m ? 'selected' : '' }}>
+                        {{ \Carbon\Carbon::parse($m . '-01')->format('F Y') }}
+                    </option>
+                    @endforeach
+                </select>
+                <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">Filter</button>
+            </form>
 
+            {{-- Statistics Card --}}
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-4 py-3">
+                    <h2 class="text-lg font-semibold text-white flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        Statistics
+                    </h2>
+                </div>
+                <div class="p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {{-- Category Stats --}}
+                        <div>
+                            <h3 class="text-md font-semibold text-gray-700 mb-3 flex items-center">
+                                <span class="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                                By Category
+                            </h3>
+                            @if(!empty($categoryStats))
+                                <div class="space-y-2">
+                                    @foreach($categoryStats as $cat)
+                                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                                        <span class="text-gray-600">{{ $cat['name'] }}</span>
+                                        <span class="font-medium text-gray-800">{{ number_format($cat['total'], 2) }} €</span>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p class="text-gray-500 text-sm">No data</p>
+                            @endif
+                        </div>
+
+                        {{-- Monthly Stats --}}
+                        <div>
+                            <h3 class="text-md font-semibold text-gray-700 mb-3 flex items-center">
+                                <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                By Month
+                            </h3>
+                            @if(!empty($monthlyStats))
+                                <div class="space-y-2 max-h-48 overflow-y-auto">
+                                    @foreach($months as $m)
+                                    @php
+                                    $monthTotal = $monthlyStats[$m] ?? 0;
+                                    @endphp
+                                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                                        <span class="text-gray-600">{{ \Carbon\Carbon::parse($m . '-01')->format('M Y') }}</span>
+                                        <span class="font-medium text-gray-800">{{ number_format($monthTotal, 2) }} €</span>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p class="text-gray-500 text-sm">No data</p>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Total --}}
+                    @if(!empty($monthlyStats))
+                    <div class="mt-4 pt-3 border-t border-gray-200 flex justify-between font-bold">
+                        <span class="text-gray-700">Total</span>
+                        <span class="text-indigo-600">{{ number_format(collect($monthlyStats)->sum(), 2) }} €</span>
+                    </div>
+                    @endif
+                </div>
+            </div>
 
             {{-- Expenses Card --}}
             <div class="bg-white rounded-lg shadow-md overflow-hidden">

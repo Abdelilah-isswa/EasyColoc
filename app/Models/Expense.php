@@ -17,10 +17,10 @@ class Expense extends Model
       protected $casts = [
         'date' => 'datetime',  
     ];
-     public function getMonthAttribute()
-    {
-        return $this->date->format('Y-m'); 
-    }
+  public function getMonthAttribute()
+{
+    return $this->date ? $this->date->format('Y-m') : null;
+}
     public function colocation()
     {
         return $this->belongsTo(Colocation::class);

@@ -8,13 +8,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Colocation;
 use App\Models\Membership;
-
+use Illuminate\Support\Facades\DB;
 class ColocationController extends Controller
 {
 public function show(Colocation $colocation, Request $request)
 {
     $user = auth()->user();
-
+    $total = $colocation->expenses()->sum('amount');
     // Get the month filter from query, default to 'all'
     $month = $request->query('month', 'all');
 
@@ -74,11 +74,29 @@ foreach ($members as $member) {
 
     $balances[$member->id] = $paidExpenses - $share + $received - $paidSettlements;
 }
+//stat
+$categoryStats = $colocation->categories->map(function($category) use ($expenses) {
+    $total = $expenses->where('category_id', $category->id)->sum('amount');
+    return [
+        'name' => $category->name,
+        'total' => $total,
+    ];
+});
+$monthlyStats = DB::table('expenses')
+    ->selectRaw("to_char(date, 'YYYY-MM') as month, SUM(amount) as total")
+    ->where('colocation_id', $colocation->id)
+    ->groupBy('month')
+    ->orderBy('month', 'desc')
+    ->get()
+    ->pluck('total', 'month') // now it’s ['2026-03' => 120, '2026-02' => 250, ...]
+    ->toArray();
 
     $months = collect(range(0, 11))->map(fn($i) => now()->subMonths($i)->format('Y-m'));
 
-    return view('colocations.show', compact('colocation', 'expenses', 'months', 'month', 'balances', 'members'));
-}
+$totalPaid = $colocation->settlements()->whereNotNull('paid_at')->sum('amount');
+return view('colocations.show', compact(
+    'colocation', 'expenses', 'months', 'month', 'balances', 'members', 'categoryStats', 'monthlyStats','totalPaid'
+));}
 
 public function create()
 {
