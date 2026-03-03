@@ -35,7 +35,7 @@ class Expense extends Model
     {
         return $this->belongsTo(User::class, 'payeur_id');
     }
-// App\Models\Expense.php
+
 public function settlements()
 {
     return $this->hasMany(Settlement::class, 'expense_id');

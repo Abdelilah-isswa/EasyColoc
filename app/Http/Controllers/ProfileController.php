@@ -9,7 +9,7 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    // Show profile info
+    
     public function show(Request $request): View
     {
         return view('profile.show', [
@@ -17,7 +17,7 @@ class ProfileController extends Controller
         ]);
     }
 
-    // Show edit form
+ 
     public function edit(Request $request): View
     {
         return view('profile.edit', [
@@ -25,7 +25,7 @@ class ProfileController extends Controller
         ]);
     }
 
-    // Update profile
+   
     public function update(Request $request)
     {
         $user = $request->user();
@@ -48,7 +48,7 @@ class ProfileController extends Controller
         return Redirect::route('profile.show')->with('success', 'Profile updated successfully.');
     }
 
-    // Delete account
+   
     public function destroy(Request $request)
     {
         $request->validate([

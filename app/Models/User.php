@@ -45,12 +45,12 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-// User.php
+
 public function activeColocations()
 {
     return $this->belongsToMany(Colocation::class, 'memberships')
                 ->withPivot('role', 'joined_at', 'left_at')
-                ->wherePivotNull('left_at'); // only active
+                ->wherePivotNull('left_at'); 
 }
         public function ownedColocations()
     {
@@ -69,7 +69,7 @@ public function activeMembership()
 {
     return $this->colocations()
         ->wherePivot('left_at', null)
-        ->where('status', 'active') // ignore cancelled
+        ->where('status', 'active') 
         ->exists();
 }
 
@@ -88,7 +88,7 @@ public function activeMembership()
         return $this->hasMany(Settlement::class, 'to_user_id');
     }
 
-    // Helpers
+    
     public function isGlobalAdmin()
     {
         return $this->global_role === 'admin';

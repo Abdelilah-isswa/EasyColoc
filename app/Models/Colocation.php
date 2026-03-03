@@ -54,7 +54,6 @@ public function activeMembers()
     {
         return $this->hasMany(Invitation::class);
     }
-    //helper method 
     
 
 public function recalculateBalances()
@@ -66,7 +65,7 @@ public function recalculateBalances()
     $memberCount = $members->count();
 
     if ($memberCount === 0) {
-        return []; // no one to calculate
+        return []; 
     }
 
     $perMemberShare = $totalExpenses / $memberCount;
@@ -76,6 +75,6 @@ public function recalculateBalances()
         $balances[$member->id] = $paid - $perMemberShare;
     }
 
-    return $balances; // array: [user_id => balance]
+    return $balances; 
 }
 }

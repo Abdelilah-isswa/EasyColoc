@@ -14,7 +14,6 @@ class InvitationController extends Controller
     // Owner sends invitation
 public function send(Request $request, Colocation $colocation)
 {   
-    // Only owner can invite
     if ($request->user()->id !== $colocation->owner_id) {
         abort(403, 'Only the owner can invite users.');
     }
@@ -30,7 +29,6 @@ public function send(Request $request, Colocation $colocation)
         'expires_at' => now()->addDays(7),
     ]);
      
-    // Send the email
     try {
         Mail::to($email)->send(new ColocationInvitationMail($invitation, $colocation));
     } catch (\Exception $e) {
@@ -42,7 +40,7 @@ public function send(Request $request, Colocation $colocation)
     return back()->with('success', 'Invitation sent to ' . $email . '!');
 }
 
-    // Show accept/decline form
+    
     public function acceptForm($token)
     {
         $invitation = Invitation::where('token', $token)->firstOrFail();
@@ -54,7 +52,6 @@ public function send(Request $request, Colocation $colocation)
         return view('invitations.accept', compact('invitation'));
     }
 
-    // Accept invitation
 public function accept($token)
 {
     if (!auth()->check()) {
@@ -80,7 +77,6 @@ public function accept($token)
            ->with('success', 'You joined the colocation!');
 }
 
-    // Decline invitation
     public function decline($token)
     {
         $invitation = Invitation::where('token', $token)->firstOrFail();
